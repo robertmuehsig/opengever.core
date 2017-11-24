@@ -1,0 +1,14 @@
+<object xmlns:i18n="http://xml.zope.org/namespaces/i18n" name="opengever.document.document" meta_type="Dexterity FTI" i18n:domain="opengever.core">
+
+  <action
+      action_id="checkout_edit_document"
+      remove="true">
+  </action>
+
+  <action
+      action_id="cancel_document_checkout"
+      remove="True">
+  </action>
+
+
+</object>
