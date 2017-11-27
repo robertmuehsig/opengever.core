@@ -25,7 +25,6 @@ def content_type_helper(item, content_type):
     """
     mtr = api.portal.get_tool(name='mimetypes_registry')
     normalize = getUtility(IIDNormalizer).normalize
-
     css_class = 'icon-dokument_verweis'
     if content_type == 'application/octet-stream':
         mimetype = mtr.globFilename(item.get('filename'))
@@ -33,6 +32,7 @@ def content_type_helper(item, content_type):
         result = mtr.lookup(content_type)
         if result and isinstance(result, tuple):
             mimetype = result[0]
+        else: mimetype = None
 
     if mimetype:
         # Strip '.gif' from end of icon name and remove leading 'icon_'

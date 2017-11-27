@@ -461,7 +461,7 @@
       globs="*.oth"
       icon_path="icon_dokument_openoffice_writer.gif"
       mimetypes="application/vnd.oasis.opendocument.text-web"
-      /> 
+      />
 
   <mimetype
       name="ODS spreadsheet"
