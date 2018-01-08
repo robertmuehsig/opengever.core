@@ -270,4 +270,7 @@
       permission="zope2.View"
       />
 
+  <adapter
+    factory=".foldercreator.FolderCreator" />
+
 </configure>

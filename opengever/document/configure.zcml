@@ -262,4 +262,7 @@
 
   <adapter factory=".document.UploadValidator" />
 
+  <adapter
+    factory=".filecreator.FileCreator" />
+
 </configure>
