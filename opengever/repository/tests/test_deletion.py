@@ -65,6 +65,39 @@ class TestRepositoryDeleter(IntegrationTestCase):
             'Expected "Delete" action to be invisible on {!r}.'.format(
                 self.branch_repofolder))
 
+        browser.open(self.leaf_repofolder)
+        self.assertNotIn(
+            'Delete',
+            browser.css('#plone-contentmenu-actions .actionMenuContent a').text,
+            'Expected "Delete" action to be invisible on {!r}.'.format(
+                self.branch_repofolder))
+
+    @browsing
+    def test_delete_action_is_only_available_when_preconditions_satisfied_also_for_managers(
+            self, browser):
+        self.login(self.manager, browser)
+
+        browser.open(self.empty_repofolder)
+        self.assertIn(
+            'Delete',
+            browser.css('#plone-contentmenu-actions .actionMenuContent a').text,
+            'Expected "Delete" action to be visible on {!r}.'.format(
+                self.empty_repofolder))
+
+        browser.open(self.branch_repofolder)
+        self.assertNotIn(
+            'Delete',
+            browser.css('#plone-contentmenu-actions .actionMenuContent a').text,
+            'Expected "Delete" action to be invisible on {!r}.'.format(
+                self.branch_repofolder))
+
+        browser.open(self.leaf_repofolder)
+        self.assertNotIn(
+            'Delete',
+            browser.css('#plone-contentmenu-actions .actionMenuContent a').text,
+            'Expected "Delete" action to be invisible on {!r}.'.format(
+                self.branch_repofolder))
+
     @browsing
     def test_raise_unauthorized_when_preconditions_not_satisfied(self, browser):
         self.login(self.administrator, browser)
