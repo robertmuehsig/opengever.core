@@ -63,7 +63,7 @@ class TestMoveItems(IntegrationTestCase):
         self.assertIn(IUUID(self.empty_dossier), uids,
                       "Active dossier not found as target in move items")
 
-        self.assertNotIn(IUUID(self.archive_dossier), uids,
+        self.assertNotIn(IUUID(self.resolved_dossier), uids,
                          "Closed dossier found as target in move items")
 
     def get_uids_from_tree_widget(self):
@@ -161,15 +161,15 @@ class TestMoveItemsWithTestbrowser(IntegrationTestCase):
     def test_document_inside_closed_dossier_is_not_movable(self, browser):
         self.login(self.dossier_manager)
         self.move_items(
-            browser, src=self.archive_dossier,
-            obj=self.archive_document, target=self.empty_dossier)
+            browser, src=self.resolved_dossier,
+            obj=self.resolved_document, target=self.empty_dossier)
 
         self.assertEqual(
             ['Can only move objects from open dossiers!'],
             error_messages())
-        self.assertIn(self.archive_document,
-                      self.archive_dossier.objectValues())
-        self.assertNotIn(self.archive_document,
+        self.assertIn(self.resolved_document,
+                      self.resolved_dossier.objectValues())
+        self.assertNotIn(self.resolved_document,
                          self.empty_dossier.objectValues())
 
     @browsing
@@ -191,14 +191,14 @@ class TestMoveItemsWithTestbrowser(IntegrationTestCase):
     def test_task_inside_closed_dossier_is_not_movable(self, browser):
         self.login(self.dossier_manager)
         self.move_items(
-            browser, src=self.archive_dossier,
-            task=self.archive_task, target=self.empty_dossier)
+            browser, src=self.resolved_dossier,
+            task=self.resolved_task, target=self.empty_dossier)
 
         self.assertEqual(
             ['Can only move objects from open dossiers!'],
             error_messages())
-        self.assertIn(self.archive_task, self.archive_dossier.objectValues())
-        self.assertNotIn(self.archive_task, self.empty_dossier.objectValues())
+        self.assertIn(self.resolved_task, self.resolved_dossier.objectValues())
+        self.assertNotIn(self.resolved_task, self.empty_dossier.objectValues())
 
     @browsing
     def test_mail_inside_closed_dossier_is_not_movable(self, browser):
@@ -249,7 +249,7 @@ class TestMoveItemsWithTestbrowser(IntegrationTestCase):
             browser.find('Paste'),
             'Paste should be visible for open dossiers')
 
-        browser.open(self.archive_dossier)
+        browser.open(self.resolved_dossier)
         self.assertIsNone(
             browser.find('Paste'),
             'Paste should not be visible for resolved dossiers')
