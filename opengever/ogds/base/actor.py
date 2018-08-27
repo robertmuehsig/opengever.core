@@ -10,7 +10,8 @@ The lookup results are
  - A null-implementation if the identifier is None or actor is missing.
  - an InboxActor if the identifier starts with "inbox:"
  - a ContactActor if the identifier starts with "contact:"
- - an UserActor for any other string
+ - a TeamActor if the identifier starts with "team:"
+ - a PloneUserActor or an OGDSUserActor for any other string.
 
 For known actor types use:
 >> Actor.user('my-identifier', user=user)
@@ -213,7 +214,7 @@ class ContactActor(Actor):
     def get_label(self, with_principal=True):
         if self.contact.lastname or self.contact.firstname:
             name = ' '.join(name for name in
-                           (self.contact.lastname, self.contact.firstname) if name)
+                            (self.contact.lastname, self.contact.firstname) if name)
         else:
             name = self.contact.id
 
@@ -231,9 +232,11 @@ class ContactActor(Actor):
 
 class PloneUserActor(Actor):
 
-    def __init__(self, identifier, user=None):
+    def __init__(self, identifier, user=None, userid=None, orgunit=None):
         super(PloneUserActor, self).__init__(identifier)
         self.user = user
+        self.userid = userid
+        self.orgunit = orgunit
 
     def corresponds_to(self, user):
         return False
@@ -257,9 +260,11 @@ class PloneUserActor(Actor):
 
 class OGDSUserActor(Actor):
 
-    def __init__(self, identifier, user=None):
+    def __init__(self, identifier, user=None, userid=None, orgunit=None):
         super(OGDSUserActor, self).__init__(identifier)
         self.user = user
+        self.userid = userid
+        self.orgunit = orgunit
 
     def corresponds_to(self, user):
         return self.user == user
@@ -282,21 +287,24 @@ class ActorLookup(object):
 
     def __init__(self, identifier):
         self.identifier = identifier
+        self.prefix = None
+        self.actor_id = self.identifier
+        if self.identifier and ":" in self.identifier:
+            self.prefix, self.actor_id = self.identifier.split(":", 1)
 
     def is_inbox(self):
-        return self.identifier.startswith('inbox:')
+        return self.prefix == 'inbox'
 
     def create_inbox_actor(self, org_unit=None):
         if not org_unit:
-            org_unit_id = self.identifier.split(':', 1)[1]
-            org_unit = ogds_service().fetch_org_unit(org_unit_id)
+            org_unit = ogds_service().fetch_org_unit(self.actor_id)
             assert org_unit, 'OrgUnit {} for identifier {} is missing.'.format(
-                org_unit_id, self.identifier)
+                self.prefix, self.identifier)
 
         return InboxActor(self.identifier, org_unit=org_unit)
 
     def is_team(self):
-        return self.identifier.startswith('team:')
+        return self.prefix == 'team'
 
     def create_team_actor(self, team=None):
         if not team:
@@ -305,7 +313,7 @@ class ActorLookup(object):
         return TeamActor(self.identifier, team=team)
 
     def is_contact(self):
-        return self.identifier.startswith('contact:')
+        return self.prefix == 'contact'
 
     def create_contact_actor(self, contact=None):
         if not contact:
@@ -327,11 +335,17 @@ class ActorLookup(object):
         return IPropertiedUser.providedBy(user) or IMemberData.providedBy(user)
 
     def load_user(self):
-        user = ogds_service().fetch_user(self.identifier)
+        user = ogds_service().fetch_user(self.actor_id)
+
+        # if we have an orgunit, make sure the user is assigned to it
+        if user and self.prefix is not None:
+            assert self.prefix in ogds_service().assigned_org_units(self.actor_id),\
+                'OrgUnit {} not valid for user {}.'.format(self.prefix, self.actor_id)
+
         if not user:
             portal = getSite()
             portal_membership = getToolByName(portal, 'portal_membership')
-            user = portal_membership.getMemberById(self.identifier)
+            user = portal_membership.getMemberById(self.actor_id)
 
         return user
 
@@ -341,9 +355,9 @@ class ActorLookup(object):
 
         if user:
             if self.is_plone_user(user):
-                return PloneUserActor(self.identifier, user=user)
+                return PloneUserActor(self.identifier, user=user, userid=self.actor_id, orgunit=self.prefix)
             else:
-                return OGDSUserActor(self.identifier, user=user)
+                return OGDSUserActor(self.identifier, user=user, userid=self.actor_id, orgunit=self.prefix)
         else:
             return self.create_null_actor()
 
