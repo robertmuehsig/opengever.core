@@ -7,4 +7,7 @@ class IPeriod(model.Schema):
 
 
 class Period(Container):
-    pass
+
+    @staticmethod
+    def get_current(committee):
+        pass
