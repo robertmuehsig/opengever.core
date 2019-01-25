@@ -37,12 +37,14 @@ def time_based_intids():
                 intid += 1
             return intid
 
+    globals()['TimeBasedIntIds'] = TimeBasedIntIds
     patched_intids = TimeBasedIntIds()
     getSite().getSiteManager().registerUtility(patched_intids, IIntIds)
     try:
         yield
     finally:
         getSite().getSiteManager().registerUtility(original_intids, IIntIds)
+        globals().pop('TimeBasedIntIds')
 
 
 def localized_datetime(*args, **kwargs):

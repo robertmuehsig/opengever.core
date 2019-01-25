@@ -4,11 +4,13 @@ from plone.app.testing.interfaces import SITE_OWNER_NAME
 from plone.app.testing.interfaces import SITE_OWNER_PASSWORD
 from threading import Thread
 from time import sleep
+import json
 import os
 import signal
 import socket
 import subprocess
 import sys
+import unittest
 import xmlrpclib
 
 
@@ -17,6 +19,15 @@ class TestserverSelftest(object):
     The selftest is not a regular unittest so that it does not run together
     with the regular tests. It is too time consuming.
     """
+
+    def __init__(self):
+        # The TestserverSelftest should not be executed by the regular testserver
+        # and therefore should not subclass TestserverSelftest.
+        # Lets do a hack so that we have assert methods anyway.
+        case = unittest.TestCase('__init__')
+        self.assertIn = case.assertIn
+        self.assertNotIn = case.assertNotIn
+        self.assertDictContainsSubset = case.assertDictContainsSubset
 
     def __call__(self):
         os.environ['ZSERVER_PORT'] = os.environ.get('ZSERVER_PORT', '60601')
@@ -41,17 +52,35 @@ class TestserverSelftest(object):
             self.testserverctl('zodb_setup')
             with browser.expect_unauthorized():
                 browser.open(self.plone_url)
+
             browser.fill({'Benutzername': SITE_OWNER_NAME,
                           'Passwort': SITE_OWNER_PASSWORD}).submit()
-            factoriesmenu.add('Ordnungssystem')
-            browser.fill({'Titel': 'Testerver Selftest'}).submit()
-            browser.open(self.plone_url)
-            assert 'Testerver Selftest' in browser.css('#navi li').text
-            self.testserverctl('zodb_teardown')
 
+            browser.replace_request_header('Accept', 'application/json')
+            browser.replace_request_header('Content-Type', 'application/json')
+
+            data = {'@type': 'opengever.dossier.businesscasedossier',
+                    'title': u'Gesch\xe4ftsdossier',
+                    'responsible': 'kathi.barfuss'}
+            browser.open(self.plone_url + 'ordnungssystem/rechnungspruefungskommission',
+                         method='POST',
+                         data=json.dumps(data))
+            dossier_url = browser.json['@id']
+
+            browser.open(dossier_url)
+            self.assertDictContainsSubset(
+                {u'title': u'Gesch\xe4ftsdossier',
+                 u'modified': u'2018-11-22T14:29:33+00:00',
+                 u'UID': u'testserversession000000000000001',
+                 u'email': u'1014293300@example.org'},
+                browser.json)
+
+            self.testserverctl('zodb_teardown')
             self.testserverctl('zodb_setup')
-            browser.open(self.plone_url)
-            assert 'Testerver Selftest' not in browser.css('#navi li').text
+
+            with browser.expect_http_error(404):
+                browser.open(dossier_url)
+
             self.testserverctl('zodb_teardown')
 
     def testserverctl(self, *args):
@@ -71,7 +100,7 @@ class TestserverSelftest(object):
     def wait_for_testserver(self):
         """Block until the testserver is ready.
         """
-        timeout_seconds = 60 * 60
+        timeout_seconds = 60 * 5
         interval = 0.1
         steps = timeout_seconds / interval
         for second in range(int(steps)):

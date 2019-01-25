@@ -1,12 +1,19 @@
+from contextlib import contextmanager
+from datetime import datetime
 from ftw.builder import session
+from ftw.testing import freeze
+from ftw.testing import staticuid
 from ftw.testing.layer import COMPONENT_REGISTRY_ISOLATION
 from opengever.base.model import create_session
 from opengever.core.testing import OpengeverFixture
+from opengever.testing.helpers import time_based_intids
 from plone import api
 from plone.app.testing import applyProfile
 from plone.app.testing import FunctionalTesting
 from plone.testing import z2
 from zope.globalrequest import setRequest
+import pytz
+import transaction
 
 
 class TestserverLayer(OpengeverFixture):
@@ -34,15 +41,28 @@ class TestserverLayer(OpengeverFixture):
         lang_tool.setDefaultLanguage('de')
         lang_tool.supported_langs = ['de-ch']
 
+
+class TestServerFunctionalTesting(FunctionalTesting):
+
+    @contextmanager
+    def isolation(self):
+        start = datetime(2018, 11, 22, 14, 29, 33, tzinfo=pytz.UTC)
+        with freeze(start, ignore_modules=['ftw.tokenauth.oauth2.jwt_grants']):
+            with staticuid('testserver-session'):
+                with time_based_intids():
+                    yield
+
     def testSetUp(self):
-        super(TestserverLayer, self).testSetUp()
-        print 'TEST SET UP'
+        super(TestServerFunctionalTesting, self).testSetUp()
+        self.context_manager = self.isolation()
+        self.context_manager.__enter__()
+        transaction.commit()
 
     def testTearDown(self):
-        super(TestserverLayer, self).testTearDown()
-        print 'TEST TEAR DOWN'
+        self.context_manager.__exit__(None, None, None)
+        super(TestServerFunctionalTesting, self).testTearDown()
 
 
-OPENGEVER_TESTSERVER = FunctionalTesting(
+OPENGEVER_TESTSERVER = TestServerFunctionalTesting(
     bases=(TestserverLayer(), z2.ZSERVER_FIXTURE),
-    name="opengever.core:testerver")
+    name="opengever.core:testserver")
