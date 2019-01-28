@@ -103,9 +103,11 @@ class TestserverSelftest(object):
         timeout_seconds = 60 * 5
         interval = 0.1
         steps = timeout_seconds / interval
-        for second in range(int(steps)):
+        for num in range(int(steps)):
             if self.is_controller_server_ready():
                 return
+            if num > 20 and num % 20 == 0:
+                print ansi_gray('[ waiting for testserver to be ready]')
             sleep(interval)
 
         self.stop_testserver()
@@ -147,6 +149,14 @@ def ansi_blue(*text):
     text = ' '.join(text)
     if sys.stdout.isatty():
         return '\033[0;34m{}\033[0m'.format(text)
+    else:
+        return text
+
+
+def ansi_gray(*text):
+    text = ' '.join(text)
+    if sys.stdout.isatty():
+        return '\033[0;36m{}\033[0m'.format(text)
     else:
         return text
 
