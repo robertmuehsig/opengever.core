@@ -72,7 +72,7 @@ class TestserverSelftest(object):
                 {u'title': u'Gesch\xe4ftsdossier',
                  u'modified': u'2018-11-22T14:29:33+00:00',
                  u'UID': u'testserversession000000000000001',
-                 u'email': u'1014293300@example.org'},
+                 u'email': u'99001@example.org'},
                 browser.json)
 
             self.testserverctl('zodb_teardown')

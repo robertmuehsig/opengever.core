@@ -6,7 +6,7 @@ from ftw.testing import staticuid
 from ftw.testing.layer import COMPONENT_REGISTRY_ISOLATION
 from opengever.base.model import create_session
 from opengever.core.testing import OpengeverFixture
-from opengever.testing.helpers import time_based_intids
+from opengever.testing.helpers import incrementing_intids
 from plone import api
 from plone.app.testing import applyProfile
 from plone.app.testing import FunctionalTesting
@@ -49,7 +49,7 @@ class TestServerFunctionalTesting(FunctionalTesting):
         start = datetime(2018, 11, 22, 14, 29, 33, tzinfo=pytz.UTC)
         with freeze(start, ignore_modules=['ftw.tokenauth.oauth2.jwt_grants']):
             with staticuid('testserver-session'):
-                with time_based_intids():
+                with incrementing_intids():
                     yield
 
     def testSetUp(self):
