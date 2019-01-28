@@ -8,12 +8,20 @@ from opengever.base.model import create_session
 from opengever.core.testing import OpengeverFixture
 from opengever.testing.helpers import incrementing_intids
 from plone import api
+from plone.app.robotframework import server
 from plone.app.testing import applyProfile
 from plone.app.testing import FunctionalTesting
 from plone.testing import z2
 from zope.globalrequest import setRequest
 import pytz
+import sys
 import transaction
+
+
+if not sys.stdout.isatty():
+    server.WAIT = lambda msg: '{0} [ wait ] {1}'.format(server.TIME(), msg)
+    server.ERROR = lambda msg: '{0} [ ERROR ] {1}'.format(server.TIME(), msg)
+    server.READY = lambda msg: '{0} [ ready ] {1}'.format(server.TIME(), msg)
 
 
 class TestserverLayer(OpengeverFixture):
