@@ -176,4 +176,7 @@
   <!-- Workspace -->
   <records interface="opengever.workspace.interfaces.IWorkspaceSettings" />
 
+  <!-- WOPI aka Office Online -->
+  <records interface="opengever.wopi.interfaces.IWOPISettings" />
+
 </registry>
