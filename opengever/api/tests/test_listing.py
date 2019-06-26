@@ -3,8 +3,11 @@ from ftw.solr.connection import SolrResponse
 from ftw.solr.interfaces import ISolrSearch
 from ftw.testbrowser import browsing
 from mock import Mock
+from opengever.api.listing import CATALOG_QUERIES
+from opengever.api.listing import FIELDS
 from opengever.api.listing import filename
 from opengever.api.listing import filesize
+from opengever.api.listing import SOLR_FILTERS
 from opengever.base.solr import OGSolrContentListingObject
 from opengever.base.solr import OGSolrDocument
 from opengever.testing import IntegrationTestCase
@@ -363,6 +366,24 @@ class TestListingEndpoint(IntegrationTestCase):
         self.assertEqual(self.document.absolute_url(), item['@id'])
         self.assertEqual(self.document.title, item['title'])
 
+    @browsing
+    def test_listings_handles_all_fields(self, browser):
+        self.login(self.manager, browser=browser)
+        for name in CATALOG_QUERIES:
+            view = '@listing?name={}'.format(name)
+            if name in ["workspaces", "workspace_folders"]:
+                context = self.workspace_root
+            else:
+                context = self.repository_root
+            browser.open(context,
+                         view=view,
+                         headers=self.api_headers)
+            self.assertTrue(browser.json.get(u'items_total') > 0)
+            for field in FIELDS:
+                browser.open(context,
+                             view="{}&columns:list={}".format(view, field),
+                             headers=self.api_headers)
+
 
 class TestListingEndpointWithSolr(IntegrationTestCase):
 
@@ -453,3 +474,22 @@ class TestListingEndpointWithSolr(IntegrationTestCase):
 
         filters = self.conn.search.call_args[0][0]['filter']
         self.assertIn(u'document_type:(contract)', filters)
+
+    @browsing
+    def test_listings_handles_all_fields(self, browser):
+        self.login(self.manager, browser=browser)
+        for name in SOLR_FILTERS:
+            view = '@listing?name={}'.format(name)
+            if name in ["workspaces", "workspace_folders"]:
+                context = self.workspace_root
+            else:
+                context = self.repository_root
+            browser.open(context,
+                         view=view,
+                         headers=self.api_headers)
+            # XXX we need to test against a real solr here
+            # self.assertTrue(browser.json.get(u'items_total') > 0)
+            for field in FIELDS:
+                browser.open(context,
+                             view="{}&columns:list={}".format(view, field),
+                             headers=self.api_headers)
