@@ -49,6 +49,7 @@ Doc-Properties Dokument:
 - ``ogg.document.reception_date``
 - ``ogg.document.delivery_date``
 - ``ogg.document.version_number``
+- ``ogg.document.document.creator.user.*`` - Doc-Properties des Benutzers, der das Dokument erstellt hat. Siehe `Doc-Properties aktueller Benutzer:`_
 
 Doc-Properties Sitzung Antrag/Traktandum:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
