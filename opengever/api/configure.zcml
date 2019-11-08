@@ -26,6 +26,8 @@
   <adapter factory=".task.SerializeTaskResponseToJson" />
   <adapter factory=".task.TaskDeserializeFromJson" />
   <adapter factory=".serializer.long_converter" />
+  <adapter factory=".field_deserializers.AnnotationsDefaultFieldDeserializer" />
+  <adapter factory=".field_deserializers.AnnotationsDatetimeFieldDeserializer" />
 
   <adapter factory=".todo.DeserializeToDoFromJson" />
   <adapter factory=".mail.DeserializeMailFromJson" />
