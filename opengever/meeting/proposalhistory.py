@@ -34,11 +34,6 @@ class ProposalResponseDescription(object):
     def __getattr__(self, name):
         return getattr(self.response, name)
 
-    def message(self):
-        message = self._msg
-        mapping = dict((field, getattr(self, field)) for field in message.to_map)
-        return _(message.label, message.default, mapping)
-
     @property
     def css_class(self):
         return self.css_classes.get(self.response_type, self.response_type)
@@ -55,8 +50,7 @@ class ProposalResponseDescription(object):
             mapping['successor_link'] = self.successor_link
         return mapping
 
-    @property
-    def _msg(self):
+    def message(self):
         messages = {
             'created': _(u'proposal_history_label_created',
                          u'Created by ${user}',
@@ -93,7 +87,7 @@ class ProposalResponseDescription(object):
 
             u'scheduled': _(u'proposal_history_label_scheduled',
                             u'Scheduled for meeting ${meeting} by ${user}',
-                            ('user', 'meeting',)),
+                            self.mapping),
 
             u'decided': _(u'proposal_history_label_decided',
                           u'Proposal decided by ${user}',
@@ -148,6 +142,9 @@ class ProposalResponse(Response):
 
     def __init__(self, response_type='commented', text='', **kwargs):
         super(ProposalResponse, self).__init__(response_type)
+        # Because during transport creation time gets rounded down to seconds
+        # we round it directly here to avoid potential ordering issues.
+        self.created = self.created.replace(microsecond=0)
         self.text = text
         self.additional_data = PersistentDict()
         self.additional_data.update(kwargs)
