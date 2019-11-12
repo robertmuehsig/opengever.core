@@ -234,12 +234,7 @@ class OneoffixxAPIClient(object):
         checksum.update(preshared_key)
 
         grant_type = 'urn:oneoffixx:oauth2:impersonate'
-        # There was a bug in the initial implementation of the Oneoffixx
-        # backend where they ended up requiring the grant type to be doubly URL
-        # encoded - we decided to leave this in as a registry configuration in
-        # case they ever fix it
-        if api.portal.get_registry_record('double_encode_bug', interface=IOneoffixxSettings):
-            grant_type = urllib.quote_plus(grant_type)
+
         data = {
             'grant_type': grant_type,
             'scope': api.portal.get_registry_record(
@@ -274,13 +269,15 @@ class OneoffixxAPIClient(object):
             url = u'/'.join((self.get_oneoffixx_webservice_url(), 'TenantInfo'))
             response = self.session.get(url)
             response.raise_for_status()
-            templatelibrary_id = response.json()[0].get('datasources')[0].get('id')
+            # ToDo: Find datasource entry with "isPrimary: true" instead of the first one
+            templatelibrary_id = response.json().get('datasources')[0].get('id')
         except requests.HTTPError as error:
             if response.status_code == 401:
                 self.refresh_access_token(invalidate=True)
                 response = self.session.get(url)
                 response.raise_for_status()
-                templatelibrary_id = response.json()[0].get('datasources')[0].get('id')
+                # ToDo: Find datasource entry with "isPrimary: true" instead of the first one
+                templatelibrary_id = response.json().get('datasources')[0].get('id')
             else:
                 raise OneoffixxBackendException(
                     'Unable to fetch the template library id from Oneoffixx.',
